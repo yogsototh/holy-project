@@ -3,21 +3,21 @@ module Main where
 import System.Console.ANSI
 import System.IO            (hFlush, stdout)
 
-output :: ConsoleIntensity -> ColorIntensity -> Color -> String -> IO ()
-output bold intensity color str = do
-    setSGR  [ SetColor Foreground intensity color
-            , SetConsoleIntensity bold
+colorPutStr :: Color -> String -> IO ()
+colorPutStr color str = do
+    setSGR  [ SetColor Foreground Dull color
+            , SetConsoleIntensity NormalIntensity
             ]
     putStr str
     setSGR []
 
 
 bk :: String -> IO ()
-bk str = output NormalIntensity Dull Green ("Bridgekeeper: " ++ str ++ "\n")
+bk str = colorPutStr Green ("Bridgekeeper: " ++ str ++ "\n")
 bkn :: String -> IO ()
-bkn str = output NormalIntensity Dull Green ("Bridgekeeper: " ++ str)
+bkn str = colorPutStr Green ("Bridgekeeper: " ++ str)
 you :: String -> IO ()
-you str = output NormalIntensity Dull Yellow ("Bridgekeeper: " ++ str ++ "\n")
+you str = colorPutStr Yellow ("Bridgekeeper: " ++ str ++ "\n")
 
 intro :: IO ()
 intro = do
@@ -50,9 +50,9 @@ ask info = do
 main :: IO ()
 main = do
     intro
-    ask "project name"
-    ask "name"
-    ask "email"
-    ask "github account"
-    ask "project in less than a dozen word?"
+    _ <- ask "project name"
+    _ <- ask "name"
+    _ <- ask "email"
+    _ <- ask "github account"
+    _ <- ask "project in less than a dozen word?"
     end
