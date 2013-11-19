@@ -22,6 +22,7 @@ executable holy-project
   -- other-extensions:
   build-depends:        base >=4.6 && <4.7
                         , ansi-terminal
+                        , split
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src

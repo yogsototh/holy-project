@@ -1,8 +1,58 @@
 module Main where
 
+import Data.Char            (toUpper,toLower,isLetter,isNumber)
+import Data.List            (intersperse)
+import Data.List.Split
 import System.Console.ANSI
 import System.IO            (hFlush, stdout)
 
+-- | Record containing all information to initialize a project
+data Project = Project {
+      projectName :: String
+    , moduleName :: String
+    , author :: Maybe String
+    , mail :: Maybe String
+    , ghaccount :: Maybe String
+    , synopsis :: Maybe String }
+
+ioassert :: Bool -> String -> IO ()
+ioassert True _ = return ()
+ioassert False str = error str
+
+-- | Ask, questions and create the initial project
+main :: IO ()
+main = do
+    intro
+    project <- ask "project name"
+    ioassert (checkProjectName project)
+             "Use only letters, numbers, spaces ans dashes please"
+    let projectname = projectNameFromString project
+        modulename = capitalize project
+    putStrLn $ "Project: " ++ projectname
+    putStrLn $ "Module: " ++ modulename
+    author <- ask "name"
+    email <- ask "email"
+    ghaccount <- ask "github account"
+    synopsis <- ask "project in less than a dozen word?"
+    createProject $ Project projectname modulename
+                        (toJust author) (toJust email)
+                        (toJust ghaccount) (toJust synopsis)
+    end
+    where
+        toJust [] = Nothing
+        toJust str = Just str
+
+-- | bridgekeeper speak
+bk :: String -> IO ()
+bk str = colorPutStr Green ("Bridgekeeper: " ++ str ++ "\n")
+-- | bridgekeeper speak without line return
+bkn :: String -> IO ()
+bkn str = colorPutStr Green ("Bridgekeeper: " ++ str)
+-- | the user dialog
+you :: String -> IO ()
+you str = colorPutStr Yellow ("Bridgekeeper: " ++ str ++ "\n")
+
+-- | show color
 colorPutStr :: Color -> String -> IO ()
 colorPutStr color str = do
     setSGR  [ SetColor Foreground Dull color
@@ -12,13 +62,7 @@ colorPutStr color str = do
     setSGR []
 
 
-bk :: String -> IO ()
-bk str = colorPutStr Green ("Bridgekeeper: " ++ str ++ "\n")
-bkn :: String -> IO ()
-bkn str = colorPutStr Green ("Bridgekeeper: " ++ str)
-you :: String -> IO ()
-you str = colorPutStr Yellow ("Bridgekeeper: " ++ str ++ "\n")
-
+-- | Show an introduction test
 intro :: IO ()
 intro = do
     bk "Stop!"
@@ -27,6 +71,7 @@ intro = do
     bk "ere the other side he see."
     you "Ask me the questions, bridgekeeper, I am not afraid.\n"
 
+-- | Show the final dialog
 end :: IO ()
 end = do
     putStrLn "\n\n"
@@ -38,6 +83,7 @@ end = do
     putStrLn "Sir Bedevere: How do you know so much about swallows?"
     you "Well, you have to know these things when you're a king, you know."
 
+-- | Ask for some info and returns it
 ask :: String -> IO String
 ask info = do
     bk $ "What is your " ++ info ++ "?"
@@ -47,12 +93,22 @@ ask info = do
     putStrLn ""
     return answer
 
-main :: IO ()
-main = do
-    intro
-    _ <- ask "project name"
-    _ <- ask "name"
-    _ <- ask "email"
-    _ <- ask "github account"
-    _ <- ask "project in less than a dozen word?"
-    end
+-- | verify if project is conform
+checkProjectName :: String -> Bool
+checkProjectName = all (\c -> (isLetter c)||(isNumber c)||(c=='-')||(c==' '))
+
+-- | transform a chain like "Holy project" in "holy-project"
+projectNameFromString :: String -> String
+projectNameFromString str = concat $ intersperse "-" (splitOneOf " -" (map toLower str))
+
+-- | transform a chain like "Holy project" in "HolyProject"
+capitalize :: String -> String
+capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
+    where
+        capitalizeWord :: String -> String
+        capitalizeWord (x:xs)   = (toUpper x):map toLower xs
+        capitalizeWord  _       = []
+
+
+createProject :: Project -> IO ()
+createProject p = putStrLn "I'm not a witch, I'm not a witch!"
