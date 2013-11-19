@@ -5,6 +5,7 @@ import Data.List            (intersperse)
 import Data.List.Split
 import System.Console.ANSI
 import System.IO            (hFlush, stdout)
+import Paths_holy_project
 
 -- | Record containing all information to initialize a project
 data Project = Project {
@@ -111,4 +112,7 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
 
 
 createProject :: Project -> IO ()
-createProject p = putStrLn "I'm not a witch, I'm not a witch!"
+createProject p = do
+    putStrLn "I'm not a witch, I'm not a witch!"
+    filepath <- getDataFileName "scaffold/gitignore"
+    putStrLn filepath

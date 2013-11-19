@@ -14,6 +14,7 @@ maintainer:             Yann.Esposito@gmail.com
 category:               Unknown
 build-type:             Simple
 -- extra-source-files:
+data-files:             scaffold/gitignore
 cabal-version:          >=1.10
 
 executable holy-project
