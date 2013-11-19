@@ -14,7 +14,8 @@ maintainer:             Yann.Esposito@gmail.com
 category:               Unknown
 build-type:             Simple
 -- extra-source-files:
-data-files:             scaffold/gitignore
+data-files:               scaffold/gitignore
+                        , scaffold/LICENSE
 cabal-version:          >=1.10
 
 executable holy-project
@@ -24,6 +25,10 @@ executable holy-project
   build-depends:        base >=4.6 && <4.7
                         , ansi-terminal
                         , split
+                        , hastache
+                        , bytestring
+                        , syb
+                        , directory
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src

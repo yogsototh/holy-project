@@ -1,10 +1,23 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Main where
 
+-- Project name manipulation
 import Data.Char            (toUpper,toLower,isLetter,isNumber)
 import Data.List            (intersperse)
 import Data.List.Split
+-- Console read write with colors
 import System.Console.ANSI
 import System.IO            (hFlush, stdout)
+-- Hastache
+import Control.Applicative
+import Data.Data
+import Text.Hastache
+import Text.Hastache.Context
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy.Char8 as LZ
+import System.Directory
+
+-- Get external file of package
 import Paths_holy_project
 
 -- | Record containing all information to initialize a project
@@ -14,7 +27,7 @@ data Project = Project {
     , author :: Maybe String
     , mail :: Maybe String
     , ghaccount :: Maybe String
-    , synopsis :: Maybe String }
+    , synopsis :: Maybe String } deriving (Data, Typeable)
 
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
@@ -96,7 +109,8 @@ ask info = do
 
 -- | verify if project is conform
 checkProjectName :: String -> Bool
-checkProjectName = all (\c -> (isLetter c)||(isNumber c)||(c=='-')||(c==' '))
+checkProjectName [] = False
+checkProjectName str = all (\c -> (isLetter c)||(isNumber c)||(c=='-')||(c==' ')) str
 
 -- | transform a chain like "Holy project" in "holy-project"
 projectNameFromString :: String -> String
@@ -111,8 +125,18 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
         capitalizeWord  _       = []
 
 
+genFile context filename outputFileName = do
+    putStrLn $ '\t':outputFileName
+    pkgfileName <- getDataFileName filename
+    template <- BS.readFile pkgfileName
+    transformedFile <- hastacheStr defaultConfig template context
+    LZ.writeFile outputFileName transformedFile
+
 createProject :: Project -> IO ()
 createProject p = do
+    let context = mkGenericContext p
+    createDirectory (projectName p)
+    setCurrentDirectory (projectName p)
     putStrLn "I'm not a witch, I'm not a witch!"
-    filepath <- getDataFileName "scaffold/gitignore"
-    putStrLn filepath
+    genFile context "scaffold/gitignore" ".gitignore"
+    genFile context "scaffold/LICENSE" "LICENSE"
