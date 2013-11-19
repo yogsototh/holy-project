@@ -1,6 +1,0 @@
-.cabal-sandbox
-cabal.sandbox.config
-dist
-*.swp
-*~
-.ghci

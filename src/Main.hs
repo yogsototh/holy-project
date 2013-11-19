@@ -125,9 +125,10 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
         capitalizeWord  _       = []
 
 
+genFile :: MuContext IO -> [Char] -> [Char] -> IO ()
 genFile context filename outputFileName = do
     putStrLn $ '\t':outputFileName
-    pkgfileName <- getDataFileName filename
+    pkgfileName <- getDataFileName ("scaffold/"++filename)
     template <- BS.readFile pkgfileName
     transformedFile <- hastacheStr defaultConfig template context
     LZ.writeFile outputFileName transformedFile
@@ -138,5 +139,14 @@ createProject p = do
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
     putStrLn "I'm not a witch, I'm not a witch!"
-    genFile context "scaffold/gitignore" ".gitignore"
-    genFile context "scaffold/LICENSE" "LICENSE"
+    genFile context "gitignore"                         $ ".gitignore"
+    genFile context "LICENSE"                           $ "LICENSE"
+    genFile context "Setup.hs"                          $ "Setup.hs"
+    genFile context "project.cabal"                     $ (projectName p) ++ ".cabal"
+    genFile context "src/Main.hs"                       $ "src/Main.hs"
+    genFile context "src/ModuleName.hs"                 $ "src/"++(moduleName p)++".hs"
+    genFile context "src/ModuleName/Coconut.hs"         $ "src/"++(moduleName p)++"/Coconut.hs"
+    genFile context "src/ModuleName/Swallow.hs"         $ "src/"++(moduleName p)++"/Swallow.hs"
+    genFile context "test/ModuleName/Coconut/Test.hs"   $ "test/"++(moduleName p)++"/Coconut/Test.hs"
+    genFile context "test/ModuleName/Swallow/Test.hs"   $ "test/"++(moduleName p)++"/Swallow/Test.hs"
+    genFile context "test/Test.hs"                      $ "test/Test.hs"
