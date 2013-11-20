@@ -41,6 +41,7 @@ executable holy-project
                         , time
                         , filepath
                         , process
+                        , random
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src
@@ -72,6 +73,7 @@ executable test-holy-project
                         , tasty-hunit
                         , tasty-quickcheck
                         , tasty-smallcheck
+
 test-suite Tests
   hs-source-dirs:       test
   ghc-options:          -Wall

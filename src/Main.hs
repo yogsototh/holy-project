@@ -10,7 +10,7 @@ import Data.Time.Clock
 import Data.Time.Calendar
 -- Console read write with colors
 import System.Console.ANSI
-import System.IO                    (hFlush, stdout)
+import System.IO                    (hFlush, stdout,hPutStrLn, stderr)
 -- Hastache
 import Data.Data
 import Text.Hastache
@@ -22,6 +22,8 @@ import System.Directory
 import System.FilePath.Posix        (takeDirectory,(</>))
 -- Execute external commands
 import System.Cmd                   (system)
+-- Random error message :)
+import System.Random
 
 -- Get external file of package
 import Paths_holy_project
@@ -36,9 +38,28 @@ data Project = Project {
     , synopsis :: String
     , year :: String } deriving (Data, Typeable)
 
+holyError :: String -> IO ()
+holyError str = do
+    r <- randomIO
+    if r
+        then
+            do
+                bk "What... is your favourite colour?"
+                you "Blue. No, yel..."
+                putStrLn "[You are thrown over the edge into the volcano]"
+                you "You: Auuuuuuuuuuuugh"
+                bk " Hee hee heh."
+        else
+            do
+                bk "What is the capital of Assyria?"
+                you "I don't know that!"
+                putStrLn "[You are thrown over the edge into the volcano]"
+                you "Auuuuuuuuuuuugh"
+    hPutStrLn stderr ('\n':str)
+
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
-ioassert False str = error str
+ioassert False str = holyError str
 
 -- | Ask, questions and create the initial project
 main :: IO ()
@@ -48,14 +69,12 @@ main = do
     ioassert (checkProjectName project)
              "Use only letters, numbers, spaces ans dashes please"
     let projectname = projectNameFromString project
-        modulename = capitalize project
-    putStrLn $ "Project: " ++ projectname
-    putStrLn $ "Module: " ++ modulename
-    in_author <- ask "name"
-    in_email <- ask "email"
-    in_ghaccount <- ask "github account"
-    in_synopsis <- ask "project in less than a dozen word?"
-    current_year <- getCurrentYear
+        modulename  = capitalize project
+    in_author       <- ask "name"
+    in_email        <- ask "email"
+    in_ghaccount    <- ask "github account"
+    in_synopsis     <- ask "project in less than a dozen word?"
+    current_year    <- getCurrentYear
     createProject $ Project projectname modulename in_author in_email
                             in_ghaccount in_synopsis current_year
     end
@@ -146,6 +165,8 @@ genFile context filename outputFileName = do
 createProject :: Project -> IO ()
 createProject p = do
     let context = mkGenericContext p
+    dirExists <- doesDirectoryExist (projectName p)
+    ioassert (not dirExists) ((projectName p) ++ " directory already exists")
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
     genFile context "gitignore"                       $ ".gitignore"
