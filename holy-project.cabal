@@ -38,6 +38,8 @@ executable holy-project
                         , bytestring
                         , syb
                         , directory
+                        , time
+                        , filepath
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src

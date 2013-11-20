@@ -2,20 +2,24 @@
 module Main where
 
 -- Project name manipulation
-import Data.Char            (toUpper,toLower,isLetter,isNumber)
-import Data.List            (intersperse)
+import Data.Char                    (toUpper,toLower,isLetter,isNumber)
+import Data.List                    (intersperse)
 import Data.List.Split
+-- Get current year for the License
+import Data.Time.Clock
+import Data.Time.Calendar
 -- Console read write with colors
 import System.Console.ANSI
-import System.IO            (hFlush, stdout)
+import System.IO                    (hFlush, stdout)
 -- Hastache
-import Control.Applicative
 import Data.Data
 import Text.Hastache
 import Text.Hastache.Context
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.Char8 as LZ
+-- File and directory Handling
+import qualified Data.ByteString            as  BS
+import qualified Data.ByteString.Lazy.Char8 as  LZ
 import System.Directory
+import System.FilePath.Posix        (takeDirectory,(</>))
 
 -- Get external file of package
 import Paths_holy_project
@@ -24,10 +28,11 @@ import Paths_holy_project
 data Project = Project {
       projectName :: String
     , moduleName :: String
-    , author :: Maybe String
-    , mail :: Maybe String
-    , ghaccount :: Maybe String
-    , synopsis :: Maybe String } deriving (Data, Typeable)
+    , author :: String
+    , mail :: String
+    , ghaccount :: String
+    , synopsis :: String
+    , year :: String } deriving (Data, Typeable)
 
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
@@ -44,17 +49,19 @@ main = do
         modulename = capitalize project
     putStrLn $ "Project: " ++ projectname
     putStrLn $ "Module: " ++ modulename
-    author <- ask "name"
-    email <- ask "email"
-    ghaccount <- ask "github account"
-    synopsis <- ask "project in less than a dozen word?"
-    createProject $ Project projectname modulename
-                        (toJust author) (toJust email)
-                        (toJust ghaccount) (toJust synopsis)
+    in_author <- ask "name"
+    in_email <- ask "email"
+    in_ghaccount <- ask "github account"
+    in_synopsis <- ask "project in less than a dozen word?"
+    current_year <- getCurrentYear
+    createProject $ Project projectname modulename in_author in_email
+                            in_ghaccount in_synopsis current_year
     end
-    where
-        toJust [] = Nothing
-        toJust str = Just str
+
+getCurrentYear :: IO String
+getCurrentYear = do
+    (current_year,_,_) <- getCurrentTime >>= return . toGregorian . utctDay
+    return (show current_year)
 
 -- | bridgekeeper speak
 bk :: String -> IO ()
@@ -125,12 +132,13 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
         capitalizeWord  _       = []
 
 
-genFile :: MuContext IO -> [Char] -> [Char] -> IO ()
+genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
 genFile context filename outputFileName = do
     putStrLn $ '\t':outputFileName
-    pkgfileName <- getDataFileName ("scaffold/"++filename)
+    pkgfileName <- getDataFileName ("scaffold" </> filename)
     template <- BS.readFile pkgfileName
     transformedFile <- hastacheStr defaultConfig template context
+    createDirectoryIfMissing True (takeDirectory outputFileName)
     LZ.writeFile outputFileName transformedFile
 
 createProject :: Project -> IO ()
@@ -143,10 +151,10 @@ createProject p = do
     genFile context "LICENSE"                           $ "LICENSE"
     genFile context "Setup.hs"                          $ "Setup.hs"
     genFile context "project.cabal"                     $ (projectName p) ++ ".cabal"
-    genFile context "src/Main.hs"                       $ "src/Main.hs"
-    genFile context "src/ModuleName.hs"                 $ "src/"++(moduleName p)++".hs"
-    genFile context "src/ModuleName/Coconut.hs"         $ "src/"++(moduleName p)++"/Coconut.hs"
-    genFile context "src/ModuleName/Swallow.hs"         $ "src/"++(moduleName p)++"/Swallow.hs"
-    genFile context "test/ModuleName/Coconut/Test.hs"   $ "test/"++(moduleName p)++"/Coconut/Test.hs"
-    genFile context "test/ModuleName/Swallow/Test.hs"   $ "test/"++(moduleName p)++"/Swallow/Test.hs"
-    genFile context "test/Test.hs"                      $ "test/Test.hs"
+    genFile context ("src" </> "Main.hs"                    )  $ "src" </> "Main.hs"
+    genFile context ("src" </> "ModuleName.hs"              )  $ "src" </> ((moduleName p)++".hs")
+    genFile context ("src" </> "ModuleName/Coconut.hs"      )  $ "src" </> (moduleName p) </> "Coconut.hs"
+    genFile context ("src" </> "ModuleName/Swallow.hs"      )  $ "src" </> (moduleName p) </> "Swallow.hs"
+    genFile context ("test" </> "ModuleName/Coconut/Test.hs")  $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
+    genFile context ("test" </> "ModuleName/Swallow/Test.hs")  $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
+    genFile context ("test" </> "Test.hs"                   )  $ "test" </> "Test.hs"
