@@ -170,6 +170,7 @@ createProject p = do
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
     genFile context "gitignore"                       $ ".gitignore"
+    genFile context "auto-update"                     $ "auto-update"
     genFile context "LICENSE"                         $ "LICENSE"
     genFile context "Setup.hs"                        $ "Setup.hs"
     genFile context "project.cabal"                   $ (projectName p) ++ ".cabal"

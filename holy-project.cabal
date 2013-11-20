@@ -16,6 +16,7 @@ build-type:             Simple
 -- extra-source-files:
 data-files:             scaffold/LICENSE
                         , scaffold/Setup.hs
+                        , scaffold/auto-update
                         , scaffold/gitignore
                         , scaffold/project.cabal
                         , scaffold/src/Main.hs

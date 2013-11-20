@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+
+relaunchCompilation() {
+    while read line; do
+        if (( $( print -- $line | grep '.cabal-sandbox' | wc -l) == 0 )); then
+            print "$line"
+            cabal install
+            ./.cabal-sandbox/bin/test-{{projectName}}
+        fi
+    done
+}
+
+# launch a cabal install and cabal test after each
+# small haskell file modification
+{hobbes "*.hs" | relaunchCompilation } &
+hobbes "*.cabal" | relaunchCompilation
