@@ -20,6 +20,8 @@ import qualified Data.ByteString            as  BS
 import qualified Data.ByteString.Lazy.Char8 as  LZ
 import System.Directory
 import System.FilePath.Posix        (takeDirectory,(</>))
+-- Execute external commands
+import System.Cmd                   (system)
 
 -- Get external file of package
 import Paths_holy_project
@@ -135,7 +137,7 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
 genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
 genFile context filename outputFileName = do
     putStrLn $ '\t':outputFileName
-    pkgfileName <- getDataFileName ("scaffold" </> filename)
+    pkgfileName <- getDataFileName ("scaffold/" ++ filename)
     template <- BS.readFile pkgfileName
     transformedFile <- hastacheStr defaultConfig template context
     createDirectoryIfMissing True (takeDirectory outputFileName)
@@ -146,15 +148,19 @@ createProject p = do
     let context = mkGenericContext p
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
-    putStrLn "I'm not a witch, I'm not a witch!"
     genFile context "gitignore"                         $ ".gitignore"
     genFile context "LICENSE"                           $ "LICENSE"
     genFile context "Setup.hs"                          $ "Setup.hs"
     genFile context "project.cabal"                     $ (projectName p) ++ ".cabal"
-    genFile context ("src" </> "Main.hs"                    )  $ "src" </> "Main.hs"
-    genFile context ("src" </> "ModuleName.hs"              )  $ "src" </> ((moduleName p)++".hs")
-    genFile context ("src" </> "ModuleName/Coconut.hs"      )  $ "src" </> (moduleName p) </> "Coconut.hs"
-    genFile context ("src" </> "ModuleName/Swallow.hs"      )  $ "src" </> (moduleName p) </> "Swallow.hs"
-    genFile context ("test" </> "ModuleName/Coconut/Test.hs")  $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
-    genFile context ("test" </> "ModuleName/Swallow/Test.hs")  $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
-    genFile context ("test" </> "Test.hs"                   )  $ "test" </> "Test.hs"
+    genFile context "src/Main.hs"                      $ "src" </> "Main.hs"
+    genFile context "src/ModuleName.hs"                $ "src" </> ((moduleName p)++".hs")
+    genFile context "src/ModuleName/Coconut.hs"        $ "src" </> (moduleName p) </> "Coconut.hs"
+    genFile context "src/ModuleName/Swallow.hs"        $ "src" </> (moduleName p) </> "Swallow.hs"
+    genFile context "test/ModuleName/Coconut/Test.hs"  $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
+    genFile context "test/ModuleName/Swallow/Test.hs"  $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
+    genFile context "test/Test.hs"                     $ "test" </> "Test.hs"
+    _ <- system "git init ."
+    _ <- system "cabal sandbox init"
+    _ <- system "cabal install"
+    _ <- system "cabal test"
+    return ()

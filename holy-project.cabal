@@ -40,6 +40,7 @@ executable holy-project
                         , directory
                         , time
                         , filepath
+                        , process
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src
