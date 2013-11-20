@@ -148,19 +148,20 @@ createProject p = do
     let context = mkGenericContext p
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
-    genFile context "gitignore"                         $ ".gitignore"
-    genFile context "LICENSE"                           $ "LICENSE"
-    genFile context "Setup.hs"                          $ "Setup.hs"
-    genFile context "project.cabal"                     $ (projectName p) ++ ".cabal"
-    genFile context "src/Main.hs"                      $ "src" </> "Main.hs"
-    genFile context "src/ModuleName.hs"                $ "src" </> ((moduleName p)++".hs")
-    genFile context "src/ModuleName/Coconut.hs"        $ "src" </> (moduleName p) </> "Coconut.hs"
-    genFile context "src/ModuleName/Swallow.hs"        $ "src" </> (moduleName p) </> "Swallow.hs"
-    genFile context "test/ModuleName/Coconut/Test.hs"  $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
-    genFile context "test/ModuleName/Swallow/Test.hs"  $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
-    genFile context "test/Test.hs"                     $ "test" </> "Test.hs"
+    genFile context "gitignore"                       $ ".gitignore"
+    genFile context "LICENSE"                         $ "LICENSE"
+    genFile context "Setup.hs"                        $ "Setup.hs"
+    genFile context "project.cabal"                   $ (projectName p) ++ ".cabal"
+    genFile context "src/Main.hs"                     $ "src"  </> "Main.hs"
+    genFile context "src/ModuleName.hs"               $ "src"  </> ((moduleName p)++".hs")
+    genFile context "src/ModuleName/Coconut.hs"       $ "src"  </> (moduleName p) </> "Coconut.hs"
+    genFile context "src/ModuleName/Swallow.hs"       $ "src"  </> (moduleName p) </> "Swallow.hs"
+    genFile context "test/ModuleName/Coconut/Test.hs" $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
+    genFile context "test/ModuleName/Swallow/Test.hs" $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
+    genFile context "test/Test.hs"                    $ "test" </> "Test.hs"
     _ <- system "git init ."
     _ <- system "cabal sandbox init"
     _ <- system "cabal install"
     _ <- system "cabal test"
+    _ <- system "./.cabal-sandbox/bin/test-" ++ (projectName p)
     return ()
