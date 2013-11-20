@@ -163,5 +163,5 @@ createProject p = do
     _ <- system "cabal sandbox init"
     _ <- system "cabal install"
     _ <- system "cabal test"
-    _ <- system "./.cabal-sandbox/bin/test-" ++ (projectName p)
+    _ <- system $ "./.cabal-sandbox/bin/test-" ++ (projectName p)
     return ()
