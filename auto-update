@@ -19,14 +19,16 @@ Darwin)
     hobbes "*.cabal" | relaunchCompilation
     ;;
 *)  # On other Unixes
-    currenttime=$(date +"%s")
+    tmp=$(date +"%s")
+    t=$tmp
     while true; do
+      tmp=$t
+      t=$(date +"%s")
       for fic in {src,test}/**/*.hs(.) *.cabal; do
           # note to use on OS X, use "stat -f %m $checkfile" instead
           modtime=$(stat --printf %Y $fic)
-          (( $modtime > $currenttime)) && print $fic
+          (( $modtime > $tmp )) && print $fic
       done
-      currenttime=$(date +"%s")
       sleep 1
     done | relaunchCompilation
     ;;

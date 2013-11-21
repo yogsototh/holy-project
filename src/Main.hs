@@ -3,14 +3,14 @@ module Main where
 
 -- Project name manipulation
 import Data.Char                    (toUpper,toLower,isLetter,isNumber)
-import Data.List                    (intersperse,foldl')
+import Data.List                    (intersperse)
 import Data.List.Split
 -- Get current year for the License
 import Data.Time.Clock
 import Data.Time.Calendar
 -- Console read write with colors
 import System.Console.ANSI
-import System.IO                    (hFlush, stdout,hPutStrLn, stderr)
+import System.IO                    (hFlush, stdout)
 -- Hastache
 import Data.Data
 import Text.Hastache
@@ -27,6 +27,9 @@ import System.Random
 --- Environment variable
 import System.Environment           (getEnv)
 import Data.Maybe                   (fromJust)
+import Control.Exception
+import System.IO.Error
+import Control.Monad                (guard)
 
 -- Get external file of package
 import Paths_holy_project
@@ -58,18 +61,25 @@ holyError str = do
                 you "I don't know that!"
                 putStrLn "[You are thrown over the edge into the volcano]"
                 you "Auuuuuuuuuuuugh"
-    hPutStrLn stderr ('\n':str)
+    error ('\n':str)
 
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
 ioassert False str = holyError str
 
+safeReadGitConfig :: IO LZ.ByteString
+safeReadGitConfig = do
+    e <- tryJust (guard . isDoesNotExistError)
+                 (do
+                    home <- getEnv "HOME"
+                    LZ.readFile $ home ++ "/.gitconfig" )
+    return $ either (const (LZ.empty)) id e
+
 -- | Ask, questions and create the initial project
 main :: IO ()
 main = do
     intro
-    home <- getEnv "HOME"
-    gitconfig <- readFile $ home ++ "/.gitconfig"
+    gitconfig <- safeReadGitConfig
     let (name,email) = getNameAndMail gitconfig
     project <- ask "project name" Nothing
     ioassert (checkProjectName project)
@@ -194,27 +204,23 @@ createProject p = do
     _ <- system $ "./.cabal-sandbox/bin/test-" ++ (projectName p)
     return ()
 
-getNameAndMail :: String -> (Maybe String,Maybe String)
-getNameAndMail gitConfigContent = (name,email)
+getNameAndMail :: LZ.ByteString -> (Maybe String,Maybe String)
+getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
     where
-        conflines :: [[String]]
-        conflines = map words (lines gitConfigContent)
+        conflines :: [[LZ.ByteString]]
+        conflines = map LZ.words (LZ.lines gitConfigContent)
 
-        name :: Maybe String
-        name  = foldl' mMerge Nothing (map getName conflines)
+        selectElem :: String -> Maybe String
+        selectElem elm = msafeHead $
+                            filter (/= Nothing)
+                                   (map (getElem elm) conflines)
 
-        email :: Maybe String
-        email = foldl' mMerge Nothing (map getEmail conflines)
+        msafeHead :: [Maybe a] -> Maybe a
+        msafeHead [] = Nothing
+        msafeHead (x:_) = x
 
-        getName :: [String] -> Maybe String
-        getName ("name":"=":xs) = Just (concat (intersperse " " xs))
-        getName _ = Nothing
-
-        getEmail :: [String] -> Maybe String
-        getEmail ("email":"=":xs) = Just (concat (intersperse " " xs))
-        getEmail _ = Nothing
-
-        mMerge :: Maybe String -> Maybe String -> Maybe String
-        mMerge Nothing (Just x) = Just x
-        mMerge Nothing Nothing = Nothing
-        mMerge (Just x) _ = Just x
+        getElem :: String -> [LZ.ByteString] -> Maybe String
+        getElem el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
+                                then Just (LZ.unpack (LZ.unwords xs))
+                                else Nothing
+        getElem _ _ = Nothing
