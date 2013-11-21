@@ -3,7 +3,7 @@ module Main where
 
 -- Project name manipulation
 import Data.Char                    (toUpper,toLower,isLetter,isNumber)
-import Data.List                    (intersperse)
+import Data.List                    (intersperse,foldl')
 import Data.List.Split
 -- Get current year for the License
 import Data.Time.Clock
@@ -24,6 +24,9 @@ import System.FilePath.Posix        (takeDirectory,(</>))
 import System.Cmd                   (system)
 -- Random error message :)
 import System.Random
+--- Environment variable
+import System.Environment           (getEnv)
+import Data.Maybe                   (fromJust)
 
 -- Get external file of package
 import Paths_holy_project
@@ -65,15 +68,18 @@ ioassert False str = holyError str
 main :: IO ()
 main = do
     intro
-    project <- ask "project name"
+    home <- getEnv "HOME"
+    gitconfig <- readFile $ home ++ "/.gitconfig"
+    let (name,email) = getNameAndMail gitconfig
+    project <- ask "project name" Nothing
     ioassert (checkProjectName project)
              "Use only letters, numbers, spaces ans dashes please"
     let projectname = projectNameFromString project
         modulename  = capitalize project
-    in_author       <- ask "name"
-    in_email        <- ask "email"
-    in_ghaccount    <- ask "github account"
-    in_synopsis     <- ask "project in less than a dozen word?"
+    in_author       <- ask "name" name
+    in_email        <- ask "email" email
+    in_ghaccount    <- ask "github account" Nothing
+    in_synopsis     <- ask "project in less than a dozen word?" Nothing
     current_year    <- getCurrentYear
     createProject $ Project projectname modulename in_author in_email
                             in_ghaccount in_synopsis current_year
@@ -126,14 +132,14 @@ end = do
     you "Well, you have to know these things when you're a king, you know."
 
 -- | Ask for some info and returns it
-ask :: String -> IO String
-ask info = do
-    bk $ "What is your " ++ info ++ "?"
+ask :: String -> Maybe String -> IO String
+ask info hint = do
+    bk $ "What is your " ++ info ++ "?" ++ (maybe "" (\h -> " ("++h++")") hint)
     putStr "> "
     hFlush stdout
     answer <- getLine
     putStrLn ""
-    return answer
+    return $ if (answer == "") && (hint /= Nothing) then fromJust hint else answer
 
 -- | verify if project is conform
 checkProjectName :: String -> Bool
@@ -187,3 +193,28 @@ createProject p = do
     _ <- system "cabal test"
     _ <- system $ "./.cabal-sandbox/bin/test-" ++ (projectName p)
     return ()
+
+getNameAndMail :: String -> (Maybe String,Maybe String)
+getNameAndMail gitConfigContent = (name,email)
+    where
+        conflines :: [[String]]
+        conflines = map words (lines gitConfigContent)
+
+        name :: Maybe String
+        name  = foldl' mMerge Nothing (map getName conflines)
+
+        email :: Maybe String
+        email = foldl' mMerge Nothing (map getEmail conflines)
+
+        getName :: [String] -> Maybe String
+        getName ("name":"=":xs) = Just (concat (intersperse " " xs))
+        getName _ = Nothing
+
+        getEmail :: [String] -> Maybe String
+        getEmail ("email":"=":xs) = Just (concat (intersperse " " xs))
+        getEmail _ = Nothing
+
+        mMerge :: Maybe String -> Maybe String -> Maybe String
+        mMerge Nothing (Just x) = Just x
+        mMerge Nothing Nothing = Nothing
+        mMerge (Just x) _ = Just x
