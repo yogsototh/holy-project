@@ -44,6 +44,7 @@ data Project = Project {
     , synopsis :: String
     , year :: String } deriving (Data, Typeable)
 
+-- | Error message
 holyError :: String -> IO ()
 holyError str = do
     r <- randomIO
@@ -63,10 +64,15 @@ holyError str = do
                 you "Auuuuuuuuuuuugh"
     error ('\n':str)
 
+-- | Assert something true. In any other case show the holy error
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
 ioassert False str = holyError str
 
+-- | return the content of ~/.gitconfig if it exists
+-- if the HOME environment variable is not set
+-- or the file doesn't exists
+-- We return an empty string
 safeReadGitConfig :: IO LZ.ByteString
 safeReadGitConfig = do
     e <- tryJust (guard . isDoesNotExistError)
@@ -95,6 +101,7 @@ main = do
                             in_ghaccount in_synopsis current_year
     end
 
+-- | Simply return the current year as String
 getCurrentYear :: IO String
 getCurrentYear = do
     (current_year,_,_) <- getCurrentTime >>= return . toGregorian . utctDay
@@ -142,14 +149,19 @@ end = do
     you "Well, you have to know these things when you're a king, you know."
 
 -- | Ask for some info and returns it
-ask :: String -> Maybe String -> IO String
+ask ::  String          -- ^ What? "name" for example
+        -> Maybe String -- ^ Default value
+        -> IO String
 ask info hint = do
-    bk $ "What is your " ++ info ++ "?" ++ (maybe "" (\h -> " ("++h++")") hint)
+    bk $ "What is your " ++ info ++ "?" ++
+         (maybe "" (\h -> " ("++h++")") hint)
     putStr "> "
     hFlush stdout
     answer <- getLine
     putStrLn ""
-    return $ if (answer == "") && (hint /= Nothing) then fromJust hint else answer
+    return $ if (answer == "") && (hint /= Nothing)
+                then fromJust hint
+                else answer
 
 -- | verify if project is conform
 checkProjectName :: String -> Bool
@@ -168,35 +180,73 @@ capitalize str = concat (map capitalizeWord (splitOneOf " -" str))
         capitalizeWord (x:xs)   = (toUpper x):map toLower xs
         capitalizeWord  _       = []
 
-
-genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
+-- | This function use a Data file mustache template
+-- and a hastache context to write a destination file
+genFile :: MuContext IO -- ^ hastache context
+            -> String   -- ^ Data file name (without 'scaffold/' see in .cabal)
+            -> FilePath -- ^ The destination file path
+            -> IO ()
 genFile context filename outputFileName = do
-    putStrLn $ '\t':outputFileName
-    pkgfileName <- getDataFileName ("scaffold/" ++ filename)
-    template <- BS.readFile pkgfileName
+    putStrLn $ '\t':outputFileName  -- show the file name
+    template <- BS.readFile =<< getDataFileName ("scaffold/" ++ filename)
     transformedFile <- hastacheStr defaultConfig template context
     createDirectoryIfMissing True (takeDirectory outputFileName)
     LZ.writeFile outputFileName transformedFile
 
+-- | This function is where we create the project once the
+-- question are answered
 createProject :: Project -> IO ()
 createProject p = do
+    -- create the hastache context object from the Project data type
     let context = mkGenericContext p
+    -- Check if the directory doesn't already exists
     dirExists <- doesDirectoryExist (projectName p)
     ioassert (not dirExists) ((projectName p) ++ " directory already exists")
+    -- Create the directory and go into it
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
-    genFile context "gitignore"                       $ ".gitignore"
-    genFile context "auto-update"                     $ "auto-update"
-    genFile context "LICENSE"                         $ "LICENSE"
-    genFile context "Setup.hs"                        $ "Setup.hs"
-    genFile context "project.cabal"                   $ (projectName p) ++ ".cabal"
-    genFile context "src/Main.hs"                     $ "src"  </> "Main.hs"
-    genFile context "src/ModuleName.hs"               $ "src"  </> ((moduleName p)++".hs")
-    genFile context "src/ModuleName/Coconut.hs"       $ "src"  </> (moduleName p) </> "Coconut.hs"
-    genFile context "src/ModuleName/Swallow.hs"       $ "src"  </> (moduleName p) </> "Swallow.hs"
-    genFile context "test/ModuleName/Coconut/Test.hs" $ "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
-    genFile context "test/ModuleName/Swallow/Test.hs" $ "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
-    genFile context "test/Test.hs"                    $ "test" </> "Test.hs"
+    -- Generate all files using data files
+    mapM_ (uncurry (genFile context))
+        [ ( "gitignore"
+          , ".gitignore"
+          )
+        , ( "auto-update"
+          , "auto-update"
+          )
+        , ( "LICENSE"
+          , "LICENSE"
+          )
+        , ( "Setup.hs"
+          , "Setup.hs"
+          )
+        , ( "project.cabal"
+          , (projectName p) ++ ".cabal"
+          )
+        , ( "src/Main.hs"
+          , "src"  </> "Main.hs"
+          )
+        , ( "src/ModuleName.hs"
+          , "src"  </> ((moduleName p)++".hs")
+          )
+        , ( "src/ModuleName/Coconut.hs"
+          , "src"  </> (moduleName p) </> "Coconut.hs"
+          )
+        , ( "src/ModuleName/Swallow.hs"
+          , "src"  </> (moduleName p) </> "Swallow.hs"
+          )
+        , ( "test/ModuleName/Coconut/Test.hs"
+          , "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
+          )
+        , ( "test/ModuleName/Swallow/Test.hs"
+          , "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
+          )
+        , ( "test/Test.hs"
+          , "test" </> "Test.hs"
+          )
+        ]
+    -- Execute some commands
+    -- We don't really need them to be succesful
+    -- So we try them anyway
     _ <- system "git init ."
     _ <- system "cabal sandbox init"
     _ <- system "cabal install"
@@ -204,12 +254,17 @@ createProject p = do
     _ <- system $ "./.cabal-sandbox/bin/test-" ++ (projectName p)
     return ()
 
+
+-- | Returns the name and email from the content of a .gitconfig file
 getNameAndMail :: LZ.ByteString -> (Maybe String,Maybe String)
 getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
     where
+        -- make lines of words
         conflines :: [[LZ.ByteString]]
         conflines = map LZ.words (LZ.lines gitConfigContent)
 
+        -- Get the first line which start with
+        -- 'elem =' and return the third field (value)
         selectElem :: String -> Maybe String
         selectElem elm = msafeHead $
                             filter (/= Nothing)
@@ -219,6 +274,8 @@ getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
         msafeHead [] = Nothing
         msafeHead (x:_) = x
 
+        -- Return the first field of a line starting by
+        -- 'elem =' or Nothing otherwise
         getElem :: String -> [LZ.ByteString] -> Maybe String
         getElem el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
                                 then Just (LZ.unpack (LZ.unwords xs))
