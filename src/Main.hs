@@ -264,30 +264,31 @@ createProject p = do
 -- But in Haskell it doesn't read the entire file.
 -- The script after the first occurence of name and email.
 getNameAndMail :: LZ.ByteString -> (Maybe String,Maybe String)
-getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
+getNameAndMail gitConfigContent = (getFirstValueFor splitted "name",
+                                   getFirstValueFor splitted "email")
     where
         -- make lines of words
-        conflines :: [[LZ.ByteString]]
-        conflines = map LZ.words (LZ.lines gitConfigContent)
+        splitted :: [[LZ.ByteString]]
+        splitted = map LZ.words (LZ.lines gitConfigContent)
 
-        -- Get the first line which start with
-        -- 'elem =' and return the third field (value)
-        selectElem :: String -> Maybe String
-        selectElem elm = firstJust (map (getValueForKey elm) conflines)
+-- Get the first line which start with
+-- 'elem =' and return the third field (value)
+getFirstValueFor :: [[LZ.ByteString]] -> String -> Maybe String
+getFirstValueFor splitted key = firstJust (map (getValueForKey key) splitted)
 
-        -- return the first Just value of a list of Maybe
-        firstJust :: (Eq a) => [Maybe a] -> Maybe a
-        firstJust l = case dropWhile (==Nothing) l of
-            [] -> Nothing
-            (j:_) -> j
+-- return the first Just value of a list of Maybe
+firstJust :: (Eq a) => [Maybe a] -> Maybe a
+firstJust l = case dropWhile (==Nothing) l of
+    [] -> Nothing
+    (j:_) -> j
 
-        -- Given a line of words ("word1":"word2":rest)
-        -- getValue will return rest if word1 == key
-        -- 'elem =' or Nothing otherwise
-        getValueForKey :: String            -- key
-                          -> [LZ.ByteString] -- line of words
-                          -> Maybe String    -- the value if found
-        getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
-                                then Just (LZ.unpack (LZ.unwords xs))
-                                else Nothing
-        getValueForKey _ _ = Nothing
+-- Given a line of words ("word1":"word2":rest)
+-- getValue will return rest if word1 == key
+-- 'elem =' or Nothing otherwise
+getValueForKey :: String            -- key
+                  -> [LZ.ByteString] -- line of words
+                  -> Maybe String    -- the value if found
+getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
+                        then Just (LZ.unpack (LZ.unwords xs))
+                        else Nothing
+getValueForKey _ _ = Nothing
