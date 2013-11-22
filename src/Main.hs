@@ -4,7 +4,7 @@ module Main where
 -- Project name manipulation
 import Data.Char                    (toUpper,toLower,isLetter,isNumber)
 import Data.List                    (intersperse)
-import Data.List.Split
+import Data.List.Split              (splitOneOf)
 -- Get current year for the License
 import Data.Time.Clock
 import Data.Time.Calendar
@@ -163,7 +163,7 @@ ask info hint = do
                 then fromJust hint
                 else answer
 
--- | verify if project is conform
+-- | verify if a project name is conform
 checkProjectName :: String -> Bool
 checkProjectName [] = False
 checkProjectName str = all (\c -> (isLetter c)||(isNumber c)||(c=='-')||(c==' ')) str
