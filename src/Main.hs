@@ -256,6 +256,13 @@ createProject p = do
 
 
 -- | Returns the name and email from the content of a .gitconfig file
+-- almost equivalent to the two zsh lines:
+--
+-- > name="$(< ~/.gitconfig awk '$1 == name {shift 2; print}')"
+-- > email="$(< ~/.gitconfig awk '$1 == email {shift 2; print}')"
+--
+-- But in Haskell it doesn't read the entire file.
+-- The script after the first occurence of name and email.
 getNameAndMail :: LZ.ByteString -> (Maybe String,Maybe String)
 getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
     where
@@ -266,18 +273,21 @@ getNameAndMail gitConfigContent = (selectElem "name",selectElem "email")
         -- Get the first line which start with
         -- 'elem =' and return the third field (value)
         selectElem :: String -> Maybe String
-        selectElem elm = msafeHead $
-                            filter (/= Nothing)
-                                   (map (getElem elm) conflines)
+        selectElem elm = firstJust (map (getValueForKey elm) conflines)
 
-        msafeHead :: [Maybe a] -> Maybe a
-        msafeHead [] = Nothing
-        msafeHead (x:_) = x
+        -- return the first Just value of a list of Maybe
+        firstJust :: (Eq a) => [Maybe a] -> Maybe a
+        firstJust l = case dropWhile (==Nothing) l of
+            [] -> Nothing
+            (j:_) -> j
 
-        -- Return the first field of a line starting by
+        -- Given a line of words ("word1":"word2":rest)
+        -- getValue will return rest if word1 == key
         -- 'elem =' or Nothing otherwise
-        getElem :: String -> [LZ.ByteString] -> Maybe String
-        getElem el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
+        getValueForKey :: String            -- key
+                          -> [LZ.ByteString] -- line of words
+                          -> Maybe String    -- the value if found
+        getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
                                 then Just (LZ.unpack (LZ.unwords xs))
                                 else Nothing
-        getElem _ _ = Nothing
+        getValueForKey _ _ = Nothing
