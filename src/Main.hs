@@ -31,8 +31,12 @@ import Control.Exception
 import System.IO.Error
 import Control.Monad                (guard)
 -- HTTP request and JSON handling
-import qualified Data.ByteString.Char8 as C
 import Network.HTTP.Conduit
+import Control.Lens.Operators       ((^?))
+import Control.Lens.Aeson
+import Data.Aeson.Encode            (fromValue)
+import qualified Data.Text.Lazy as TLZ
+import qualified Data.Text.Lazy.Builder as TLB
 
 -- Get external file of package
 import Paths_holy_project
@@ -278,7 +282,7 @@ getNameAndMail gitConfigContent = (getFirstValueFor splitted "name",
 -- Get the first line which start with
 -- 'elem =' and return the third field (value)
 getFirstValueFor :: [[LZ.ByteString]] -> String -> Maybe String
-getFirstValueFor splitted key = firstJust (map (getValueForKey key) splitted)
+getFirstValueFor splitted keyname = firstJust (map (getValueForKey keyname) splitted)
 
 -- return the first Just value of a list of Maybe
 firstJust :: (Eq a) => [Maybe a] -> Maybe a
@@ -297,15 +301,14 @@ getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
                         else Nothing
 getValueForKey _ _ = Nothing
 
-
+simpleHTTPWithUserAgent :: String -> IO LZ.ByteString
 simpleHTTPWithUserAgent url = do
     r  <- parseUrl url
     let request = r { requestHeaders =  [ ("User-Agent","HTTP-Conduit") ] }
     body <- withManager $ \manager -> do
                 response <- httpLbs request manager
                 return $ responseBody response
-    let str = LZ.unpack body
-    return $ Just str
+    return body
 
 
 -- Ask the github API
@@ -313,5 +316,9 @@ simpleHTTPWithUserAgent url = do
 -- It took me way too long to get this error
 getGHUser :: String -> IO (Maybe String)
 getGHUser email = do
-            body <- simpleHTTPWithUserAgent $ "https://api.github.com/search/users?q=" ++ email
-            return body
+    url = "https://api.github.com/search/users?q=" ++ email
+    body <- simpleHTTPWithUserAgent url
+    login <- return $ body ^? key "items" . nth 0 . key "login"
+    return $ fmap jsonValueToString login
+    where
+        jsonValueToString = TLZ.unpack . TLB.toLazyText . fromValue

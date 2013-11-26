@@ -44,7 +44,10 @@ executable holy-project
                         , process
                         , random
                         , http-conduit
+                        , lens
+                        , lens-aeson
                         , aeson
+                        , text
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src
