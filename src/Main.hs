@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
 module Main where
 
 -- Project name manipulation
@@ -30,6 +30,9 @@ import Data.Maybe                   (fromJust)
 import Control.Exception
 import System.IO.Error
 import Control.Monad                (guard)
+-- HTTP request and JSON handling
+import qualified Data.ByteString.Char8 as C
+import Network.HTTP.Conduit
 
 -- Get external file of package
 import Paths_holy_project
@@ -94,7 +97,8 @@ main = do
         modulename  = capitalize project
     in_author       <- ask "name" name
     in_email        <- ask "email" email
-    in_ghaccount    <- ask "github account" Nothing
+    ghUserHint      <- getGHUser in_email
+    in_ghaccount    <- ask "github account" ghUserHint
     in_synopsis     <- ask "project in less than a dozen word?" Nothing
     current_year    <- getCurrentYear
     createProject $ Project projectname modulename in_author in_email
@@ -292,3 +296,22 @@ getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
                         then Just (LZ.unpack (LZ.unwords xs))
                         else Nothing
 getValueForKey _ _ = Nothing
+
+
+simpleHTTPWithUserAgent url = do
+    r  <- parseUrl url
+    let request = r { requestHeaders =  [ ("User-Agent","HTTP-Conduit") ] }
+    body <- withManager $ \manager -> do
+                response <- httpLbs request manager
+                return $ responseBody response
+    let str = LZ.unpack body
+    return $ Just str
+
+
+-- Ask the github API
+-- A strange behaviour you HAVE TO add a User-Agent in your header.
+-- It took me way too long to get this error
+getGHUser :: String -> IO (Maybe String)
+getGHUser email = do
+            body <- simpleHTTPWithUserAgent $ "https://api.github.com/search/users?q=" ++ email
+            return body

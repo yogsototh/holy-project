@@ -43,6 +43,8 @@ executable holy-project
                         , filepath
                         , process
                         , random
+                        , http-conduit
+                        , aeson
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src
