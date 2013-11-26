@@ -37,6 +37,8 @@ import Control.Lens.Aeson
 import Data.Aeson.Encode            (fromValue)
 import qualified Data.Text.Lazy as TLZ
 import qualified Data.Text.Lazy.Builder as TLB
+-- Fork
+import Control.Concurrent
 
 -- Get external file of package
 import Paths_holy_project
@@ -93,7 +95,13 @@ main :: IO ()
 main = do
     intro
     gitconfig <- safeReadGitConfig
+    earlyhint <- newEmptyMVar
     let (name,email) = getNameAndMail gitconfig
+    maybe   (putMVar earlyhint Nothing) -- if no email found put Nothing
+            (\hintmail -> do            -- in the other case ask the github API
+                forkIO (putMVar earlyhint =<< getGHUser hintmail)
+                >> return ())
+            email
     project <- ask "project name" Nothing
     ioassert (checkProjectName project)
              "Use only letters, numbers, spaces ans dashes please"
@@ -101,7 +109,9 @@ main = do
         modulename  = capitalize project
     in_author       <- ask "name" name
     in_email        <- ask "email" email
-    ghUserHint      <- getGHUser in_email
+    ghUserHint      <- if (maybe "" id email) /= in_email
+                            then getGHUser in_email
+                            else takeMVar earlyhint
     in_ghaccount    <- ask "github account" ghUserHint
     in_synopsis     <- ask "project in less than a dozen word?" Nothing
     current_year    <- getCurrentYear
@@ -315,8 +325,9 @@ simpleHTTPWithUserAgent url = do
 -- A strange behaviour you HAVE TO add a User-Agent in your header.
 -- It took me way too long to get this error
 getGHUser :: String -> IO (Maybe String)
+getGHUser ""    = return Nothing
 getGHUser email = do
-    url = "https://api.github.com/search/users?q=" ++ email
+    let url = "https://api.github.com/search/users?q=" ++ email
     body <- simpleHTTPWithUserAgent url
     login <- return $ body ^? key "items" . nth 0 . key "login"
     return $ fmap jsonValueToString login
