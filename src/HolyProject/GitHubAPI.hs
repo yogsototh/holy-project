@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-module HolyProject.GitHubAPI where
+module HolyProject.GitHubAPI
+    (searchGHUserFromEmail)
+where
 
 import qualified Data.ByteString.Lazy.Char8 as  LZ
 -- HTTP request and JSON handling

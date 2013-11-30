@@ -1,11 +1,26 @@
 #!/usr/bin/env zsh
 
+autoload colors
+colors
+for COLOR in RED GREEN YELLOW BLUE MAGENTA CYAN BLACK WHITE; do
+    eval $COLOR='$fg_no_bold[${(L)COLOR}]'
+    eval BOLD_$COLOR='$fg_bold[${(L)COLOR}]'
+done
+eval RESET='$reset_color'
+
+latestThread=0
 relaunchCompilation() {
     while read line; do
         if (( $( print -- $line | grep '.cabal-sandbox' | wc -l) == 0 )); then
-            print "$line"
-            cabal install && \
-            ./.cabal-sandbox/bin/test-holy-project
+            (($latestThread>0)) && \
+            (( $(ps x | awk "\$1 == $latestThread" | wc -l)>0 )) && {
+                print -- "\n${RED}STOPPED${RESET}"
+                kill $latestThread
+            }
+            print "${BLUE}$line${RESET}"
+            { cabal install && \
+                ./.cabal-sandbox/bin/test-holy-project } &
+            latestThread=$!
         fi
     done
 }
@@ -22,7 +37,7 @@ Darwin)
     tmp=$(date +"%s")
     t=$tmp
     while true; do
-      tmp=$t
+      tmp=$(( $t - 1 ))
       t=$(date +"%s")
       for fic in {src,test}/**/*.hs(.) *.cabal; do
           # note to use on OS X, use "stat -f %m $checkfile" instead
