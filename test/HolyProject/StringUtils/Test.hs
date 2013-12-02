@@ -7,16 +7,16 @@ import HolyProject.StringUtils
 
 stringUtilsSuite :: TestTree
 stringUtilsSuite = testGroup "StringUtils"
-    [ testCase "projectNameFromString space"
-        (testProjectNameFromString "Holy Project" "holy-project")
-    , testCase "projectNameFromString dash"
-        (testProjectNameFromString "Holy-Project" "holy-project")
-    , testCase "projectNameFromString caps"
-        (testProjectNameFromString "Holy PROJECT" "holy-project")
-    , testCase "projectNameFromString underscore"
-        (testProjectNameFromString "Holy_PROJECT" "holy_project")
+    [ testGroup "projectNameFromString HUnit"
+        $ map (testEq projectNameFromString)
+            [ ("space","Holy Project","holy-project")
+            , ("empty","","")
+            , ("number","12345","12345")
+            ]
     ]
 
-testProjectNameFromString :: String -> String -> Assertion
-testProjectNameFromString input expectedoutput =
-    expectedoutput @=? projectNameFromString input
+testEq :: (Eq a, Show a) =>
+            (t -> a)        -- ^ Function to test
+            -> (String,t,a) -- ^ (name,input,expected output)
+            -> TestTree
+testEq f (name,input,expected) = testCase name (f input @?= expected)
