@@ -4,7 +4,7 @@ import HolyProject.GitConfig        ( getNameAndMailFromGitConfig)
 import HolyProject.StringUtils      ( projectNameFromString
                                     , capitalize
                                     , checkProjectName)
-import HolyProject.GithubAPI        ( searchGHUserFromEmail)
+import HolyProject.GithubAPI        ( searchGHUser)
 import HolyProject.MontyPython      ( bk
                                     , you
                                     , ask
@@ -74,7 +74,7 @@ holyStarter = do
     earlyhint <- newEmptyMVar
     maybe   (putMVar earlyhint Nothing) -- if no email found put Nothing
             (\hintmail -> do            -- in the other case ask the github API
-                forkIO (putMVar earlyhint =<< searchGHUserFromEmail hintmail)
+                forkIO (putMVar earlyhint =<< searchGHUser hintmail)
                 >> return ())
             email
     project <- ask "project name" Nothing
@@ -85,7 +85,7 @@ holyStarter = do
     in_author       <- ask "name" name
     in_email        <- ask "email" email
     ghUserHint      <- if (maybe "" id email) /= in_email
-                            then searchGHUserFromEmail in_email
+                            then searchGHUser in_email
                             else takeMVar earlyhint
     in_ghaccount    <- ask "github account" ghUserHint
     in_synopsis     <- ask "project in less than a dozen word?" Nothing
@@ -159,6 +159,9 @@ createProject p = do
           )
         , ( "Setup.hs"
           , "Setup.hs"
+          )
+        , ( "interact"
+          , "interact"
           )
         , ( "project.cabal"
           , (projectName p) ++ ".cabal"

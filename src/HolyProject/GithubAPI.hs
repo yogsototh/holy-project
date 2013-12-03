@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module HolyProject.GithubAPI
-    (searchGHUserFromEmail)
+    (searchGHUser)
 where
 
 import qualified Data.ByteString.Lazy.Char8 as  LZ
@@ -25,9 +25,9 @@ simpleHTTPWithUserAgent url = do
 -- | Ask the github API
 -- A strange behaviour you HAVE TO add a User-Agent in your header.
 -- It took me way too long to get this error
-searchGHUserFromEmail :: String -> IO (Maybe String)
-searchGHUserFromEmail ""    = return Nothing
-searchGHUserFromEmail email = do
+searchGHUser :: String -> IO (Maybe String)
+searchGHUser ""    = return Nothing
+searchGHUser email = do
     let url = "https://api.github.com/search/users?q=" ++ email
     body <- simpleHTTPWithUserAgent url
     login <- return $ body ^? key "items" . nth 0 . key "login"

@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+packagedir=( ./.cabal-sandbox/*.conf.d(/N) )
+(( ${#packagedir} == 0 )) && {
+    print -- "Error no package found in sandbox"
+    print -- "Please us cabal sandbox init"
+    exit 1
+}>&2
+(( ${#packagedir} > 1 )) && {
+    print -- "Error Too many packages:"
+    print -l -- $packagedir
+    exit 1
+}>&2
+export GHC_PACKAGE_PATH=$packagedir/:
+GHC_PACKAGE_PATH=$packagedir/: ghci

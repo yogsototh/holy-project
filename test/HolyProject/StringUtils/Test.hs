@@ -1,22 +1,25 @@
 module HolyProject.StringUtils.Test
 ( stringUtilsSuite
 ) where
-import Test.Tasty (testGroup, TestTree)
-import Test.Tasty.HUnit
-import HolyProject.StringUtils
+import              Test.Tasty                      (testGroup, TestTree)
+import              Test.Tasty.SmallCheck           (forAll)
+import qualified    Test.Tasty.SmallCheck       as  SC
+import qualified    Test.Tasty.QuickCheck       as  QC
+import              Test.SmallCheck.Series          (Serial)
+import              HolyProject.StringUtils
 
 stringUtilsSuite :: TestTree
 stringUtilsSuite = testGroup "StringUtils"
-    [ testGroup "projectNameFromString HUnit"
-        $ map (testEq projectNameFromString)
-            [ ("space","Holy Project","holy-project")
-            , ("empty","","")
-            , ("number","12345","12345")
-            ]
+    [ SC.testProperty "SC projectNameFromString idempotent" $
+            idempotent projectNameFromString
+    , SC.testProperty "SC capitalize idempotent" $
+            deeperIdempotent capitalize
+    , QC.testProperty "QC projectNameFromString idempotent" $
+            idempotent capitalize
     ]
 
-testEq :: (Eq a, Show a) =>
-            (t -> a)        -- ^ Function to test
-            -> (String,t,a) -- ^ (name,input,expected output)
-            -> TestTree
-testEq f (name,input,expected) = testCase name (f input @?= expected)
+idempotent f = \s -> f s == f (f s)
+
+deeperIdempotent :: (Eq a, Show a, Serial m a) => (a -> a) -> SC.Property m
+deeperIdempotent f = forAll $ SC.changeDepth1 (+1) $ \s -> f s == f (f s)
+
