@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module HolyProject.GitHubAPI
+module HolyProject.GithubAPI
     (searchGHUserFromEmail)
 where
 

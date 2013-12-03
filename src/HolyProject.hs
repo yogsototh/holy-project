@@ -4,7 +4,7 @@ import HolyProject.GitConfig        ( getNameAndMailFromGitConfig)
 import HolyProject.StringUtils      ( projectNameFromString
                                     , capitalize
                                     , checkProjectName)
-import HolyProject.GitHubAPI        ( searchGHUserFromEmail)
+import HolyProject.GithubAPI        ( searchGHUserFromEmail)
 import HolyProject.MontyPython      ( bk
                                     , you
                                     , ask
