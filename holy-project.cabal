@@ -57,6 +57,7 @@ executable holy-project
 library
   exposed-modules:      HolyProject
                         , HolyProject.StringUtils
+                        , HolyProject.GithubAPI
                         , HolyProject.Coconut
   -- other-modules:
   -- other-extensions:
