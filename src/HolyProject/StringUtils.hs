@@ -1,4 +1,8 @@
-module HolyProject.StringUtils where
+module HolyProject.StringUtils
+( projectNameFromString
+, capitalize
+, checkProjectName
+) where
 
 -- Project name manipulation
 import Data.Char                    (toUpper,toLower,isLetter,isNumber)
