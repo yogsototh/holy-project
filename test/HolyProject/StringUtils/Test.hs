@@ -1,7 +1,7 @@
 module HolyProject.StringUtils.Test
 ( stringUtilsSuite
 ) where
-import              Data.Char                       (isControl,isSymbol)
+import              Data.Char                       (isPrint,isSymbol)
 import              Test.Tasty                      (testGroup, TestTree)
 import              Test.Tasty.HUnit
 import              Test.Tasty.SmallCheck           (forAll)
@@ -10,6 +10,7 @@ import qualified    Test.Tasty.QuickCheck       as  QC
 import              Test.SmallCheck.Series          (Serial)
 import              HolyProject.StringUtils
 
+-- | Test with QuickCheck and SmallCheck
 tp name prop = testGroup name
     [ QC.testProperty "QC" prop
     , SC.testProperty "SC" prop
@@ -22,15 +23,15 @@ stringUtilsSuite = testGroup "StringUtils"
     , SC.testProperty "capitalize idempotent" $
          deeperIdempotent capitalize
     , tp "no space in project name" $
-         \s -> dropWhile (/=' ') (projectNameFromString s) == []
+         \s -> ' ' `notElem` projectNameFromString s
     , tp "no space in capitalized name" $
-         \s -> dropWhile (/=' ') (capitalize s) == []
+         \s -> ' ' `notElem` capitalize s
     , tp "no dash in capitalized name" $
-            \s -> dropWhile (/='-') (capitalize s) == []
+            \s -> '-' `notElem` capitalize s
     , tp "no control char" $
-        \s -> if (s /= "") && (checkProjectName s == True) then (all (not . isControl) s) else True
+        \s -> not (checkProjectName s) || all isPrint s
     , tp "no symbol char" $
-        \s -> if (s /= "") && (checkProjectName s == True) then (all (not . isSymbol) s) else True
+        \s -> not (checkProjectName s) || all (not . isSymbol) s
     , testCase "doesn't accept empty project name" $
             checkProjectName "" @=? False
     ]

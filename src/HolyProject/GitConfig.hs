@@ -23,7 +23,7 @@ safeReadGitConfig = do
                  (do
                     home <- getEnv "HOME"
                     LZ.readFile $ home ++ "/.gitconfig" )
-    return $ either (const (LZ.empty)) id e
+    return $ either (const LZ.empty) id e
 
 -- | Returns the name and email from the content of a .gitconfig file
 -- almost equivalent to the two zsh lines:
@@ -58,7 +58,7 @@ firstJust l = case dropWhile (==Nothing) l of
 getValueForKey :: String            -- key
                   -> [LZ.ByteString] -- line of words
                   -> Maybe String    -- the value if found
-getValueForKey el (n:e:xs) = if (n == (LZ.pack el)) && (e == (LZ.pack "="))
+getValueForKey el (n:e:xs) = if (n == LZ.pack el) && (e == LZ.pack "=")
                         then Just (LZ.unpack (LZ.unwords xs))
                         else Nothing
 getValueForKey _ _ = Nothing

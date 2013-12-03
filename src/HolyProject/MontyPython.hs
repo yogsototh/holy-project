@@ -7,7 +7,7 @@ where
 -- Console read write with colors
 import System.Console.ANSI
 import System.IO                    (hFlush, stdout)
-import Data.Maybe                   (fromJust)
+import Data.Maybe                   (fromJust,isJust)
 
 -- | bridgekeeper speak
 bk :: String -> IO ()
@@ -31,12 +31,12 @@ ask ::  String          -- ^ What? "name" for example
         -> IO String
 ask info hint = do
     bk $ "What is your " ++ info ++ "?" ++
-         (maybe "" (\h -> " ("++h++")") hint)
+         maybe "" (\h -> " ("++h++")") hint
     putStr "> "
     hFlush stdout
     answer <- getLine
     putStrLn ""
-    return $ if (answer == "") && (hint /= Nothing)
+    return $ if (answer == "") && isJust hint
                 then fromJust hint
                 else answer
 

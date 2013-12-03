@@ -31,6 +31,9 @@ import Control.Concurrent
 -- Get external file of package
 import Paths_holy_project
 
+import Data.Maybe                   (fromMaybe)
+import Control.Monad                (void)
+
 -- | Record containing all information to initialize a project
 data Project = Project {
       projectName :: String
@@ -73,9 +76,8 @@ holyStarter = do
     (name,email) <- getNameAndMailFromGitConfig
     earlyhint <- newEmptyMVar
     maybe   (putMVar earlyhint Nothing) -- if no email found put Nothing
-            (\hintmail -> do            -- in the other case ask the github API
-                forkIO (putMVar earlyhint =<< searchGHUser hintmail)
-                >> return ())
+            (\hintmail ->               -- in the other case ask the github API
+                void (forkIO (putMVar earlyhint =<< searchGHUser hintmail)))
             email
     project <- ask "project name" Nothing
     ioassert (checkProjectName project)
@@ -84,7 +86,7 @@ holyStarter = do
         modulename  = capitalize project
     in_author       <- ask "name" name
     in_email        <- ask "email" email
-    ghUserHint      <- if (maybe "" id email) /= in_email
+    ghUserHint      <- if fromMaybe "" email /= in_email
                             then searchGHUser in_email
                             else takeMVar earlyhint
     in_ghaccount    <- ask "github account" ghUserHint
@@ -97,7 +99,8 @@ holyStarter = do
 -- | Simply return the current year as String
 getCurrentYear :: IO String
 getCurrentYear = do
-    (current_year,_,_) <- getCurrentTime >>= return . toGregorian . utctDay
+    -- (current_year,_,_) <- getCurrentTime >>= return . toGregorian . utctDay
+    (current_year,_,_) <- fmap (toGregorian . utctDay) getCurrentTime
     return (show current_year)
 
 -- | Show an introduction test
@@ -142,7 +145,7 @@ createProject p = do
     let context = mkGenericContext p
     -- Check if the directory doesn't already exists
     dirExists <- doesDirectoryExist (projectName p)
-    ioassert (not dirExists) ((projectName p) ++ " directory already exists")
+    ioassert (not dirExists) (projectName p ++ " directory already exists")
     -- Create the directory and go into it
     createDirectory (projectName p)
     setCurrentDirectory (projectName p)
@@ -164,25 +167,25 @@ createProject p = do
           , "interact"
           )
         , ( "project.cabal"
-          , (projectName p) ++ ".cabal"
+          , projectName p ++ ".cabal"
           )
         , ( "src/Main.hs"
           , "src"  </> "Main.hs"
           )
         , ( "src/ModuleName.hs"
-          , "src"  </> ((moduleName p)++".hs")
+          , "src"  </> (moduleName p++".hs")
           )
         , ( "src/ModuleName/Coconut.hs"
-          , "src"  </> (moduleName p) </> "Coconut.hs"
+          , "src"  </> moduleName p </> "Coconut.hs"
           )
         , ( "src/ModuleName/Swallow.hs"
-          , "src"  </> (moduleName p) </> "Swallow.hs"
+          , "src"  </> moduleName p </> "Swallow.hs"
           )
         , ( "test/ModuleName/Coconut/Test.hs"
-          , "test" </> (moduleName p) </> "Coconut" </> "Test.hs"
+          , "test" </> moduleName p </> "Coconut" </> "Test.hs"
           )
         , ( "test/ModuleName/Swallow/Test.hs"
-          , "test" </> (moduleName p) </> "Swallow" </> "Test.hs"
+          , "test" </> moduleName p </> "Swallow" </> "Test.hs"
           )
         , ( "test/Test.hs"
           , "test" </> "Test.hs"
@@ -195,5 +198,5 @@ createProject p = do
     _ <- system "cabal sandbox init"
     _ <- system "cabal install"
     _ <- system "cabal test"
-    _ <- system $ "./.cabal-sandbox/bin/test-" ++ (projectName p)
+    _ <- system $ "./.cabal-sandbox/bin/test-" ++ projectName p
     return ()
