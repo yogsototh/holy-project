@@ -16,6 +16,11 @@ build-type:             Simple
 -- extra-source-files:
 cabal-version:          >=1.10
 
+source-repository head
+    type:               git
+    branch:             master
+    location:           http://github.com/{{ghaccount}}/{{projectName}}
+
 executable {{projectName}}
   main-is:              Main.hs
   -- other-modules:
