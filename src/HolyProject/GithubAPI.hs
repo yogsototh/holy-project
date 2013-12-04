@@ -14,15 +14,14 @@ import qualified Data.Text.Lazy.Builder as TLB
 import Control.Monad                ((<=<))
 
 -- | make a simple http request but add a user agent to the HTTP header
+-- You HAVE TO add a User-Agent in your header to use the github API.
 simpleHTTPWithUserAgent :: String -> IO LZ.ByteString
 simpleHTTPWithUserAgent url = do
     r  <- parseUrl url
     let request = r { requestHeaders =  [ ("User-Agent","HTTP-Conduit") ] }
     withManager $ (return.responseBody) <=< httpLbs request
 
--- | Ask the github API
--- A strange behaviour you HAVE TO add a User-Agent in your header.
--- It took me way too long to get this error
+-- | Search a username using the github API
 searchGHUser :: String -> IO (Maybe String)
 searchGHUser ""    = return Nothing
 searchGHUser email = do

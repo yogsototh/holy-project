@@ -26,7 +26,7 @@ colorPutStr color str = do
     setSGR []
 
 -- | Ask for some info and returns it
-ask ::  String          -- ^ What? "name" for example
+ask ::  String          -- ^ What? \"name\" for example
         -> Maybe String -- ^ Default value
         -> IO String
 ask info hint = do

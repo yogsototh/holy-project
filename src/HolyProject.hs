@@ -44,7 +44,7 @@ data Project = Project {
     , synopsis :: String
     , year :: String } deriving (Data, Typeable)
 
--- | Randomly choose an end scenario and then show a "serious" error message
+-- | Randomly choose an end scenario and then show a \"serious\" error message
 holyError :: String -> IO ()
 holyError str = do
     r <- randomIO

@@ -25,6 +25,7 @@ relaunchCompilation() {
     done
 }
 
+echo "First launch" | relaunchCompilation
 case $(uname) in
 Darwin)
     # On mac OS X, use hobbes (cabal install hobbes)
