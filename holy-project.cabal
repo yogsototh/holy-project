@@ -16,7 +16,7 @@ license-file:           LICENSE
 author:                 Yann Esposito (Yogsototh)
 maintainer:             Yann.Esposito@gmail.com
 -- copyright:
-category:               Unknown
+category:               Development
 build-type:             Simple
 -- extra-source-files:
 data-files:             scaffold/LICENSE
