@@ -27,7 +27,9 @@ data-files:             scaffold/LICENSE
                         , scaffold/project.cabal
                         , scaffold/src/Main.hs
                         , scaffold/src/ModuleName.hs
+                        , scaffold/src/ModuleName/Coconut.hs
                         , scaffold/src/ModuleName/Swallow.hs
+                        , scaffold/test/ModuleName/Coconut/Test.hs
                         , scaffold/test/ModuleName/Swallow/Test.hs
                         , scaffold/test/Test.hs
 cabal-version:          >=1.10
