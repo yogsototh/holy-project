@@ -27,7 +27,9 @@ data-files:             scaffold/LICENSE
                         , scaffold/project.cabal
                         , scaffold/src/Main.hs
                         , scaffold/src/ModuleName.hs
+                        , scaffold/src/ModuleName/Coconut.hs
                         , scaffold/src/ModuleName/Swallow.hs
+                        , scaffold/test/ModuleName/Coconut/Test.hs
                         , scaffold/test/ModuleName/Swallow/Test.hs
                         , scaffold/test/Test.hs
 cabal-version:          >=1.10
@@ -67,6 +69,8 @@ library
   exposed-modules:      HolyProject
                         , HolyProject.StringUtils
                         , HolyProject.GithubAPI
+  other-modules:        HolyProject.GitConfig
+                        , HolyProject.MontyPython
   -- other-modules:
   -- other-extensions:
   build-depends:        base >=4.6 && <4.7
@@ -93,6 +97,8 @@ executable test-holy-project
   hs-source-dirs:       test
   ghc-options:          -Wall
   main-is:              Test.hs
+  other-modules:        HolyProject.GithubAPI.Test
+                        , HolyProject.StringUtils.Test
   default-language:     Haskell2010
   build-depends:        base ==4.6.*, Cabal >= 1.16.0
                         , holy-project
