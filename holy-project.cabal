@@ -44,21 +44,21 @@ executable holy-project
   -- other-modules:
   -- other-extensions:
   build-depends:        base
-                        , ansi-terminal
-                        , split
-                        , hastache
+                        , ansi-terminal >= 0.6.1.1 && < 0.7
+                        , split         >= 0.2.2   && < 0.3
+                        , hastache      >= 0.5.1   && < 0.6
                         , bytestring
-                        , syb
+                        , syb           >= 0.4.1    && < 0.5
                         , directory
                         , time
                         , filepath
                         , process
-                        , random
-                        , http-conduit
-                        , lens
-                        , lens-aeson
-                        , aeson
-                        , text
+                        , random        >= 1.0.1.1 && < 1.1
+                        , http-conduit  >= 2.0.0.8 && < 2.1
+                        , lens          >= 3.10.2  && < 3.11
+                        , lens-aeson    >= 0.1.2   && < 0.2
+                        , aeson         >= 0.6.2.1 && < 0.7
+                        , text          >= 0.11.3.1 && < 0.12
   -- from Tasty cabal with ansi-terminal
   cpp-options:          -DCOLORS
   hs-source-dirs:       src
