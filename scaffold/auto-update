@@ -19,7 +19,7 @@ relaunchCompilation() {
             }
             print "${BLUE}$line${RESET}"
             { cabal install && \
-                ./.cabal-sandbox/bin/test-holy-project } &
+                ./.cabal-sandbox/bin/test-{{projectName}} } &
             latestThread=$!
         fi
     done
