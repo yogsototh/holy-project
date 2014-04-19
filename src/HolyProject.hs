@@ -22,13 +22,11 @@ import qualified Data.Text.Lazy.IO          as TIO
 import Text.Hastache
 import Text.Hastache.Context
 -- File and directory Handling
-import qualified Data.ByteString            as  BS
-import qualified Data.ByteString.Lazy.Char8 as  LZ
 import System.Directory
 import System.FilePath.Posix        (takeDirectory,(</>))
 import System.Posix.Files           (setFileMode)
 -- Execute external commands
-import System.Cmd                   (system)
+import System.Process               (system)
 -- Random error message :)
 import System.Random
 -- Fork
