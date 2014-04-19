@@ -10,11 +10,15 @@ import HolyProject.MontyPython      ( bk
                                     , ask
                                     )
 
+-- Read octal, easier for chmod
+import Numeric                      (readOct)
 -- Get current year for the License
 import Data.Time.Clock
 import Data.Time.Calendar
 -- Hastache
 import Data.Data
+import qualified Data.Text.Lazy             as T
+import qualified Data.Text.Lazy.IO          as TIO
 import Text.Hastache
 import Text.Hastache.Context
 -- File and directory Handling
@@ -22,6 +26,7 @@ import qualified Data.ByteString            as  BS
 import qualified Data.ByteString.Lazy.Char8 as  LZ
 import System.Directory
 import System.FilePath.Posix        (takeDirectory,(</>))
+import System.Posix.Files           (setFileMode)
 -- Execute external commands
 import System.Cmd                   (system)
 -- Random error message :)
@@ -132,10 +137,10 @@ genFile :: MuContext IO -- ^ hastache context
             -> IO ()
 genFile context filename outputFileName = do
     putStrLn $ '\t':outputFileName  -- show the file name
-    template <- BS.readFile =<< getDataFileName ("scaffold/" ++ filename)
-    transformedFile <- hastacheStr defaultConfig template context
+    template <- TIO.readFile =<< getDataFileName ("scaffold/" ++ filename)
+    transformedFile <- hastacheStr defaultConfig (T.toStrict template) context
     createDirectoryIfMissing True (takeDirectory outputFileName)
-    LZ.writeFile outputFileName transformedFile
+    TIO.writeFile outputFileName transformedFile
 
 -- | This function is where we create the project once the
 -- question are answered
@@ -191,6 +196,8 @@ createProject p = do
           , "test" </> "Test.hs"
           )
         ]
+    -- Change some execution access
+    _ <- setFileMode "auto-update" ((fst . head . readOct) "777")
     -- Execute some commands
     -- We don't really need them to be succesful
     -- So we try them anyway

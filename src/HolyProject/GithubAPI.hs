@@ -7,8 +7,8 @@ import qualified Data.ByteString.Lazy.Char8 as  LZ
 -- HTTP request and JSON handling
 import Network.HTTP.Conduit
 import Control.Lens.Operators       ((^?))
-import Control.Lens.Aeson
-import Data.Aeson.Encode            (fromValue)
+import Data.Aeson.Encode            (encodeToTextBuilder)
+import Data.Aeson.Lens              (key,nth)
 import qualified Data.Text.Lazy as TLZ
 import qualified Data.Text.Lazy.Builder as TLB
 import Control.Monad                ((<=<))
@@ -30,4 +30,4 @@ searchGHUser email = do
     let login = body ^? key "items" . nth 0 . key "login"
     return $ fmap jsonValueToString login
     where
-        jsonValueToString = TLZ.unpack . TLB.toLazyText . fromValue
+        jsonValueToString = TLZ.unpack . TLB.toLazyText . encodeToTextBuilder
