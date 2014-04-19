@@ -196,6 +196,7 @@ createProject p = do
         ]
     -- Change some execution access
     _ <- setFileMode "auto-update" ((fst . head . readOct) "777")
+    _ <- setFileMode "interact" ((fst . head . readOct) "777")
     -- Execute some commands
     -- We don't really need them to be succesful
     -- So we try them anyway
