@@ -9,6 +9,21 @@ It initialize git, use cabal sandboxes, and provide two useful scripts:
 
 You could check this [blog post](http://yannesposito.com/Scratch/en/blog/Holy-Haskell-Starter/) to learn how it was made.
 
+## Install
+
+~~~
+cabal update && cabal install holy-project
+~~~
+
+Then simply:
+
+~~~
+cd ~/my-projects
+holy-projects
+~~~~
+
+And follows the instructions.
+
 ## Thanks
 
 Thanks to [Kirill](https://github.com/qrilka) to have taken the time to fix it.
