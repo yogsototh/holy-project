@@ -2,7 +2,7 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                   holy-project
-version:                0.1.1.0
+version:                0.1.1.1
 synopsis:               Start your Haskell project with cabal, git and tests.
 description:            Holy Project is an application wich ask the user
                         some questions and create files to help you
@@ -57,6 +57,7 @@ executable holy-project
                         , random
                         , http-conduit >= 2.1.1
                         , lens         >= 4.1.2
+                        , lens-aeson
                         , aeson
                         , text
   -- from Tasty cabal with ansi-terminal
@@ -88,6 +89,7 @@ library
                         , random
                         , http-conduit  >= 2.1.1
                         , lens          >= 4.1.2
+                        , lens-aeson
                         , aeson
                         , text
   ghc-options:          -Wall
