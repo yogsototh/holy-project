@@ -196,13 +196,14 @@ createProject p = do
         ]
     -- Change some execution access
     _ <- setFileMode "auto-update" ((fst . head . readOct) "777")
-    _ <- setFileMode "interact" ((fst . head . readOct) "777")
     -- Execute some commands
     -- We don't really need them to be succesful
     -- So we try them anyway
     _ <- system "git init ."
-    _ <- system "cabal sandbox init"
-    _ <- system "cabal install"
+    -- Use Haskell LTS by downloading the cabal config
+    _ <- system "curl -O https://www.stackage.org/snapshot/lts-2.5/cabal.config"
+    _ <- system "cabal install --dependencies-only --enable-tests . -j"
+    _ <- system "cabal build"
     _ <- system "cabal test"
-    _ <- system $ "./.cabal-sandbox/bin/test-" ++ projectName p
+    _ <- system $ "cabal run test-" ++ projectName p
     return ()

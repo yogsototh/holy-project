@@ -2,18 +2,18 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                   holy-project
-version:                0.1.1.2
+version:                0.2.0.0
 synopsis:               Start your Haskell project with cabal, git and tests.
 description:            Holy Project is an application wich ask the user
                         some questions and create files to help you
                         starting a new Haskell project.
                         There are example for tests using HUnit and SmallCheck
-                        It initializes git, use cabal sandboxes, and provide
-                        two useful scripts: \"auto-update\" and \"interact\".
+                        It initializes git, use Haskell LTS, and provide
+                        a useful script: \"auto-update\".
 homepage:               http://github.com/yogsototh/holy-project
 license:                MIT
 license-file:           LICENSE
-author:                 Yann Esposito (Yogsototh)
+author:                 Yann Esposito (yogsototh)
 maintainer:             Yann.Esposito@gmail.com
 -- copyright:
 category:               Development
@@ -23,7 +23,6 @@ data-files:             scaffold/LICENSE
                         , scaffold/Setup.hs
                         , scaffold/auto-update
                         , scaffold/gitignore
-                        , scaffold/interact
                         , scaffold/project.cabal
                         , scaffold/src/Main.hs
                         , scaffold/src/ModuleName.hs
