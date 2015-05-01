@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module HolyProject.StringUtils.Test
 ( stringUtilsSuite
 ) where
