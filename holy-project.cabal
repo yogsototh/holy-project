@@ -2,7 +2,7 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                   holy-project
-version:                0.2.0.0
+version:                0.2.0.1
 synopsis:               Start your Haskell project with cabal, git and tests.
 description:            Holy Project is an application wich ask the user
                         some questions and create files to help you

@@ -166,9 +166,6 @@ createProject p = do
         , ( "Setup.hs"
           , "Setup.hs"
           )
-        , ( "interact"
-          , "interact"
-          )
         , ( "project.cabal"
           , projectName p ++ ".cabal"
           )
