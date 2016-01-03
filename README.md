@@ -1,5 +1,9 @@
 # Holy Project
 
+<a href="http://hackage.haskell.org/package/holy-project">
+<img alt="Hackage" src="https://img.shields.io/hackage/v/holy-project.svg"/>
+</a>
+
 Holy Project is an application which ask the user some questions
 and create files to help you starting a new Haskell project.
 
